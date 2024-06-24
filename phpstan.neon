@@ -1,0 +1,17 @@
+parameters:
+    level: max
+    paths:
+        - public
+        - src
+        - tests
+    ignoreErrors:
+        - '#Parameter \#1 \$message of method S3\\Tunnel\\Tcp\\Session\\EncriptedSession::encrypt\(\) expects object, mixed given.#'
+        - '#Method S3\\Tunnel\\Tcp\\Session\\EncriptedSession::decrypt\(\) should return object but returns mixed.#'
+        - '#Method S3\\Tunnel\\Tcp\\ProcessManager::spawn\(\) should return int but returns mixed.#'
+        - '#Parameter \#1 \$subdomain of static method S3\\Tunnel\\Tcp\\Request\\DispatchRequestMessageContext::get\(\) expects string, mixed given.#'
+        - '#Parameter \$httpMethod of method FastRoute\\Dispatcher::dispatch\(\) expects string, mixed given.#'
+        - '#Parameter \$method of class Laminas\\Diactoros\\ServerRequest constructor expects string\|null, mixed given.#'
+        - '#Cannot call method set\(\) on mixed.#'
+        - '#Cannot call method on\(\) on mixed.#'
+        - '#Cannot access offset ''mailbox'' on mixed.#'
+        - '#Function Swoole\\Coroutine\\run not found.#'
