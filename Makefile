@@ -3,21 +3,25 @@ PROJECT_NAME=tunnel
 PROJECT_DIR=$(shell pwd)
 USER_ID=$(shell id -u)
 USER_GROUP=$(shell id -g)
+ITERATIVE=-it
+ifdef CI
+	ITERATIVE=
+endif
 DOCKER_CONTAINER_RUN=docker container run \
-	-it \
+	$(ITERATIVE) \
 	--rm \
 	--cpus=.5 \
 	--network host \
 	-m 1024m \
 	-u $(USER_ID):$(USER_GROUP) \
 	-v $(PROJECT_DIR):/app/$(PROJECT_NAME) \
-	-w /app/$(PROJECT_NAME) $(PROJECT_NAME):$(ARTIFACT_REVISION)
+	-w /app/$(PROJECT_NAME) silvanei/$(PROJECT_NAME):$(ARTIFACT_REVISION)
 
 .PHONY: default
 default: image;
 
 image:
-	docker build -t $(PROJECT_NAME):$(ARTIFACT_REVISION) .
+	docker build -t silvanei/$(PROJECT_NAME):$(ARTIFACT_REVISION) .
 
 install:
 	$(DOCKER_CONTAINER_RUN) composer install
