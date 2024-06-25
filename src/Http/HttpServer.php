@@ -23,7 +23,7 @@ final readonly class HttpServer
 {
     private Dispatcher $dispatcher;
 
-    public function __construct(private readonly TcpDispactController $tcpDispactController)
+    public function __construct(private readonly TcpDispatchController $tcpDispatchController)
     {
         $this->dispatcher = simpleDispatcher(function (RouteCollector $router) {
             $router->addRoute('GET', '/', new HelloWorldController());
@@ -46,7 +46,7 @@ final readonly class HttpServer
             return;
         }
 
-        $psrResponse = $this->handleRequest($psrRequest->withAttribute('subdomain', $subdomain), $this->tcpDispactController);
+        $psrResponse = $this->handleRequest($psrRequest->withAttribute('subdomain', $subdomain), $this->tcpDispatchController);
         $this->emitResponse($swooleResponse, $psrResponse);
     }
 
