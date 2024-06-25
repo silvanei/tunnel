@@ -10,8 +10,8 @@ use S3\Tunnel\Tcp\Message\GoodByMessage;
 use S3\Tunnel\Tcp\Message\ResponseMessage;
 use S3\Tunnel\Tcp\Request\DispatchRequestMessage;
 use S3\Tunnel\Tcp\Request\DispatchRequestMessageContext;
-use S3\Tunnel\Tcp\Session\EncriptedSession;
-use S3\Tunnel\Tcp\Session\EncriptedSessionContext;
+use S3\Tunnel\Tcp\Session\EncryptedSession;
+use S3\Tunnel\Tcp\Session\EncryptedSessionContext;
 use S3\Tunnel\Tcp\Session\SimpleCryptBox;
 use Swoole\Coroutine\Channel;
 use Swoole\Http\Server as HttpServer;
@@ -27,14 +27,14 @@ final class TcpServer
 
     public function receive(HttpServer $server, int $fd, int $reactorId, string $data): void
     {
-        $encryptedSession = EncriptedSessionContext::get($fd);
+        $encryptedSession = EncryptedSessionContext::get($fd);
         if (! $encryptedSession) {
             $this->logger->debug('Receive public key');
 
             $cryptoBox = new SimpleCryptBox();
             $publicKey = TcpPacker::unpack($data);
-            EncriptedSessionContext::set($fd, new EncriptedSession($cryptoBox, $publicKey));
-            $this->defferConnectionClose($fd, EncriptedSessionContext::delete(...));
+            EncryptedSessionContext::set($fd, new EncryptedSession($cryptoBox, $publicKey));
+            $this->defferConnectionClose($fd, EncryptedSessionContext::delete(...));
             $server->send($fd, TcpPacker::pack($cryptoBox->boxPublicKey));
             return;
         }
@@ -55,15 +55,15 @@ final class TcpServer
         }
         unset($this->onConnectionClose[$fd]);
 
-        $this->logger->debug("Session $fd desconnected");
+        $this->logger->debug("Session $fd disconnected");
     }
 
     private function handleAuthMessage(HttpServer $server, int $fd, AuthMessage $message): void
     {
         $this->logger->debug('Receive auth message', (array)$message);
-        $encryptedSession = EncriptedSessionContext::get($fd);
+        $encryptedSession = EncryptedSessionContext::get($fd);
         if (! $encryptedSession) {
-            $this->logger->critical('Session not encripted');
+            $this->logger->critical('Session not encrypted');
             return;
         }
 

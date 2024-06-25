@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace S3\Tunnel\Tcp\Session;
 
-final class EncriptedSessionContext
+final class EncryptedSessionContext
 {
-    /** @var EncriptedSession[] */
+    /** @var EncryptedSession[] */
     private static array $context = [];
 
-    public static function set(int $sessionId, EncriptedSession $encriptedSession): void
+    public static function set(int $sessionId, EncryptedSession $encryptedSession): void
     {
-        self::$context[$sessionId] = $encriptedSession;
+        self::$context[$sessionId] = $encryptedSession;
     }
 
-    public static function get(int $sessionId): ?EncriptedSession
+    public static function get(int $sessionId): ?EncryptedSession
     {
         return self::$context[$sessionId] ?? null;
     }

@@ -12,7 +12,7 @@ use S3\Tunnel\Tcp\Message\RequestMessage;
 use S3\Tunnel\Tcp\Request\DispatchRequestMessageContext;
 use Swoole\Coroutine;
 
-final readonly class TcpDispactController implements RequestHandlerInterface
+final readonly class TcpDispatchController implements RequestHandlerInterface
 {
     public function __construct(private float $timeout = 30)
     {

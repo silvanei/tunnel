@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace S3\Tunnel\Tcp\Session;
 
-final readonly class EncriptedSession
+final readonly class EncryptedSession
 {
     public function __construct(private SimpleCryptBox $criptoBox, private string $publicKey)
     {

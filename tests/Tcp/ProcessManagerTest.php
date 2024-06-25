@@ -11,7 +11,7 @@ use Swoole\Coroutine\Channel;
 
 final class ProcessManagerTest extends TestCase
 {
-    public function testSpawShouldCreateCoroutineProcess(): void
+    public function testSpawnShouldCreateCoroutineProcess(): void
     {
         Coroutine\run(function () {
             $coroutineId = ProcessManager::spawn(fn (Channel $mailbox) => $mailbox->pop());
