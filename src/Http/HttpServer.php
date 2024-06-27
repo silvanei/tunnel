@@ -14,6 +14,8 @@ use Laminas\Stratigility\MiddlewarePipe;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use S3\Tunnel\Http\Middleware\AuthorizationMiddleware;
+use S3\Tunnel\Shared\GitHub\GitHubService;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 
@@ -23,10 +25,14 @@ final readonly class HttpServer
 {
     private Dispatcher $dispatcher;
 
-    public function __construct(private readonly TcpDispatchController $tcpDispatchController)
-    {
+    public function __construct(
+        private TcpDispatchController $tcpDispatchController,
+        private GithubService $githubService,
+    ) {
         $this->dispatcher = simpleDispatcher(function (RouteCollector $router) {
-            $router->addRoute('GET', '/', new HelloWorldController());
+            $router->addRoute('GET', '/', new HomeController());
+            $router->addRoute('GET', '/authentication', new AuthenticationController());
+            $router->addRoute('GET', '/github/authorization-callback', new AuthorizationController($this->githubService));
         });
     }
 
@@ -52,8 +58,11 @@ final readonly class HttpServer
 
     private function extractSubdomain(Request $request): string
     {
-        var_dump($request->header['host']);
-        preg_match('/(?<subdomain>.*).tunnel.localhost/', $request->header['host'], $matches);
+        $domain = getenv('SERVER_DOMAIN');
+        if (! is_string($domain)) {
+            $domain = 'tunnel.localhost';
+        }
+        preg_match("/(?<subdomain>.*).$domain/", $request->header['host'], $matches);
         return $matches['subdomain'] ?? '';
     }
 
@@ -74,19 +83,58 @@ final readonly class HttpServer
     private function handleRequest(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $middlewarePipe = new MiddlewarePipe();
+        if (! $request->getAttribute('subdomain')) {
+            $middlewarePipe->pipe(new AuthorizationMiddleware($this->githubService));
+        }
         $middlewarePipe->pipe(new RequestHandlerMiddleware($handler));
         return $middlewarePipe->handle($request);
     }
 
     private function emitResponse(Response $swooleResponse, ResponseInterface $psrResponse): void
     {
+        $psrResponse = $this->setCookie($psrResponse, $swooleResponse);
         foreach ($psrResponse->getHeaders() as $name => $values) {
             foreach ($values as $value) {
                 $swooleResponse->setHeader($name, $value);
             }
         }
-
         $swooleResponse->setStatusCode($psrResponse->getStatusCode(), $psrResponse->getReasonPhrase());
         $swooleResponse->end($psrResponse->getBody()->getContents());
+    }
+
+    private function setCookie(ResponseInterface $psrResponse, Response $swooleResponse): ResponseInterface
+    {
+        if ($psrResponse->hasHeader('set-cookie')) {
+            $cookies = $psrResponse->getHeader('set-cookie');
+            foreach ($cookies as $string) {
+                if ($attributes = preg_split('/\s*;\s*/', $string, -1, PREG_SPLIT_NO_EMPTY)) {
+                    $nameAndValue = explode('=', array_shift($attributes), 2);
+                    $cookie = ['name' => $nameAndValue[0], 'value' => isset($nameAndValue[1]) ? urldecode($nameAndValue[1]) : ''];
+                    while ($attribute = array_shift($attributes)) {
+                        $attribute = explode('=', $attribute, 2);
+                        $attributeName = strtolower($attribute[0]);
+                        $attributeValue = $attribute[1] ?? null;
+
+                        if (in_array($attributeName, ['expires', 'domain', 'path', 'samesite'], true)) {
+                            $cookie[$attributeName] = $attributeValue;
+                            continue;
+                        }
+
+                        if (in_array($attributeName, ['secure', 'httponly'], true)) {
+                            $cookie[$attributeName] = true;
+                            continue;
+                        }
+
+                        if ($attributeName === 'max-age') {
+                            $cookie['expires'] = time() + (int)$attributeValue;
+                        }
+                    }
+
+                    $swooleResponse->setCookie(...$cookie);
+                }
+            }
+        }
+
+        return $psrResponse->withoutHeader('set-cookie');
     }
 }

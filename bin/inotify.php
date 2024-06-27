@@ -85,4 +85,4 @@ final class Inotify
     }
 }
 
-(new Inotify(dirForWatch: ['public', 'src']))->start();
+(new Inotify(dirForWatch: ['public', 'src', 'templates']))->start();
