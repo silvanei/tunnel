@@ -1,0 +1,13 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <div class="d-flex flex-column align-items-center justify-content-center min-vh-100">
+        <img src="{{ user.avatar }}" alt="avatar" class="rounded-circle">
+        <h1 class="alert alert-success mt-4">
+            Welcome, {{ user.name }}
+        </h1>
+        <h2 class="alert alert-danger mt-4">
+            {{ user.token }}
+        </h2>
+    </div>
+{% endblock %}

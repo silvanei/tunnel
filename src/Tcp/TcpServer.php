@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace S3\Tunnel\Tcp;
 
 use Psr\Log\LoggerInterface;
+use S3\Tunnel\Shared\GitHub\GitHubService;
 use S3\Tunnel\Tcp\Message\AuthMessage;
 use S3\Tunnel\Tcp\Message\GoodByMessage;
 use S3\Tunnel\Tcp\Message\ResponseMessage;
@@ -21,8 +22,10 @@ final class TcpServer
     /** @var array<int, callable[]> */
     private array $onConnectionClose;
 
-    public function __construct(private readonly LoggerInterface $logger)
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly GitHubService $gitHubService,
+    ) {
     }
 
     public function receive(HttpServer $server, int $fd, int $reactorId, string $data): void
@@ -67,8 +70,7 @@ final class TcpServer
             return;
         }
 
-        // @TODO authentication
-        if ($message->user === '1') {
+        if ($this->gitHubService->validateToken($message->accessToken)) {
             $tcpSenderCoroutineId = ProcessManager::spawn(static function (Channel $mailbox) use ($server, $fd, $encryptedSession) {
                 while ($message = $mailbox->pop()) {
                     $server->send($fd, TcpPacker::pack($encryptedSession->encrypt($message)));

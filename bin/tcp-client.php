@@ -102,7 +102,7 @@ function connect(Logger $logger): array
     $logger->debug('Receive public key');
 
     $encryptedSession = new EncryptedSession($criptoBox, $serverPublicKey);
-    $authMessage = new AuthMessage(user: '1', pass: 'password');
+    $authMessage = new AuthMessage(accessToken: getenv('GITHUB_ACCESS_TOKEN'));
     $authMessage = $encryptedSession->encrypt($authMessage);
     $client->send(TcpPacker::pack($authMessage));
     return [$client, $encryptedSession];

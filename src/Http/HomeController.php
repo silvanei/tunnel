@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace S3\Tunnel\Http;
 
-use Laminas\Diactoros\Response\TextResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use S3\Tunnel\Http\Response\ViewModel;
+use S3\Tunnel\Shared\GitHub\User;
 
-final readonly class HelloWorldController implements RequestHandlerInterface
+final readonly class HomeController implements RequestHandlerInterface
 {
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        return new TextResponse(text: 'Hello World');
+        return new ViewModel('home', ['user' => $request->getAttribute(User::class)]);
     }
 }

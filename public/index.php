@@ -7,6 +7,7 @@ use Monolog\Level;
 use Monolog\Logger;
 use S3\Tunnel\Http\HttpServer;
 use S3\Tunnel\Http\TcpDispatchController;
+use S3\Tunnel\Shared\GitHub\GitHubService;
 use S3\Tunnel\Tcp\TcpServer;
 use Swoole\Constant;
 use Swoole\Http\Server;
@@ -17,8 +18,9 @@ require 'vendor/autoload.php';
     $logger = new Logger('http-server');
     $logger->useLoggingLoopDetection(detectCycles: false);
     $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
+    $githubService = new GithubService();
 
-    $httpServer = new HttpServer(new TcpDispatchController());
+    $httpServer = new HttpServer(new TcpDispatchController(), $githubService);
     $http = new Server('0.0.0.0', 9501);
     $http->set([
         Constant::OPTION_LOG_LEVEL => SWOOLE_LOG_DEBUG,
@@ -31,7 +33,7 @@ require 'vendor/autoload.php';
     $logger->useLoggingLoopDetection(detectCycles: false);
     $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
 
-    $tcpServer = new TcpServer($logger);
+    $tcpServer = new TcpServer($logger, $githubService);
     $tcp = $http->listen('0.0.0.0', 9502, SWOOLE_TCP);
     $tcp->set([
         Constant::OPTION_LOG_LEVEL => SWOOLE_LOG_DEBUG,
