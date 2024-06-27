@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace S3\Tunnel\Http;
+namespace S3\Tunnel\Http\Controller;
 
 use Laminas\Diactoros\Response\RedirectResponse;
 use Laminas\Diactoros\Response\TextResponse;
@@ -11,7 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use S3\Tunnel\Shared\GitHub\GitHubService;
 
-final readonly class AuthorizationController implements RequestHandlerInterface
+final readonly class AuthorizationAction implements RequestHandlerInterface
 {
     public function __construct(private GithubService $githubService)
     {

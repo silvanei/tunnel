@@ -14,6 +14,10 @@ use Laminas\Stratigility\MiddlewarePipe;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use S3\Tunnel\Http\Controller\AuthenticationAction;
+use S3\Tunnel\Http\Controller\AuthorizationAction;
+use S3\Tunnel\Http\Controller\HomeAction;
+use S3\Tunnel\Http\Controller\TcpDispatchAction;
 use S3\Tunnel\Http\Middleware\AuthorizationMiddleware;
 use S3\Tunnel\Shared\GitHub\GitHubService;
 use Swoole\Http\Request;
@@ -26,13 +30,13 @@ final readonly class HttpServer
     private Dispatcher $dispatcher;
 
     public function __construct(
-        private TcpDispatchController $tcpDispatchController,
+        private TcpDispatchAction $tcpDispatchController,
         private GithubService $githubService,
     ) {
         $this->dispatcher = simpleDispatcher(function (RouteCollector $router) {
-            $router->addRoute('GET', '/', new HomeController());
-            $router->addRoute('GET', '/authentication', new AuthenticationController());
-            $router->addRoute('GET', '/github/authorization-callback', new AuthorizationController($this->githubService));
+            $router->addRoute('GET', '/', new HomeAction());
+            $router->addRoute('GET', '/authentication', new AuthenticationAction());
+            $router->addRoute('GET', '/github/authorization-callback', new AuthorizationAction($this->githubService));
         });
     }
 
@@ -104,37 +108,41 @@ final readonly class HttpServer
 
     private function setCookie(ResponseInterface $psrResponse, Response $swooleResponse): ResponseInterface
     {
-        if ($psrResponse->hasHeader('set-cookie')) {
-            $cookies = $psrResponse->getHeader('set-cookie');
-            foreach ($cookies as $string) {
-                if ($attributes = preg_split('/\s*;\s*/', $string, -1, PREG_SPLIT_NO_EMPTY)) {
-                    $nameAndValue = explode('=', array_shift($attributes), 2);
-                    $cookie = ['name' => $nameAndValue[0], 'value' => isset($nameAndValue[1]) ? urldecode($nameAndValue[1]) : ''];
-                    while ($attribute = array_shift($attributes)) {
-                        $attribute = explode('=', $attribute, 2);
-                        $attributeName = strtolower($attribute[0]);
-                        $attributeValue = $attribute[1] ?? null;
-
-                        if (in_array($attributeName, ['expires', 'domain', 'path', 'samesite'], true)) {
-                            $cookie[$attributeName] = $attributeValue;
-                            continue;
-                        }
-
-                        if (in_array($attributeName, ['secure', 'httponly'], true)) {
-                            $cookie[$attributeName] = true;
-                            continue;
-                        }
-
-                        if ($attributeName === 'max-age') {
-                            $cookie['expires'] = time() + (int)$attributeValue;
-                        }
-                    }
-
-                    $swooleResponse->setCookie(...$cookie);
-                }
-            }
+        if (! $psrResponse->hasHeader('Set-Cookie')) {
+            return $psrResponse;
         }
 
-        return $psrResponse->withoutHeader('set-cookie');
+        $cookies = $psrResponse->getHeader('Set-Cookie');
+        foreach ($cookies as $string) {
+            if (! $attributes = preg_split('/\s*;\s*/', $string, -1, PREG_SPLIT_NO_EMPTY)) {
+                continue;
+            }
+
+            $nameAndValue = explode('=', array_shift($attributes), 2);
+            $cookie = ['name' => $nameAndValue[0], 'value' => isset($nameAndValue[1]) ? urldecode($nameAndValue[1]) : ''];
+            while ($attribute = array_shift($attributes)) {
+                $attribute = explode('=', $attribute, 2);
+                $attributeName = strtolower($attribute[0]);
+                $attributeValue = $attribute[1] ?? null;
+
+                if (in_array($attributeName, ['expires', 'domain', 'path', 'samesite'], true)) {
+                    $cookie[$attributeName] = $attributeValue;
+                    continue;
+                }
+
+                if (in_array($attributeName, ['secure', 'httponly'], true)) {
+                    $cookie[$attributeName] = true;
+                    continue;
+                }
+
+                if ($attributeName === 'max-age') {
+                    $cookie['expires'] = time() + (int)$attributeValue;
+                }
+            }
+
+            $swooleResponse->setCookie(...$cookie);
+        }
+
+        return $psrResponse->withoutHeader('Set-Cookie');
     }
 }
