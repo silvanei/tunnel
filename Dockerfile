@@ -27,13 +27,11 @@ RUN set -e \
     && pecl install \
         sockets \
         inotify \
-        xdebug \
         pcov \
     && pecl install --configureoptions 'enable-openssl="yes" enable-hook-curl="yes"' swoole \
     && docker-php-ext-enable \
         inotify \
         swoole \
-        xdebug \
         pcov \
     #   Clear install
     && composer clear-cache \

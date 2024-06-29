@@ -12,5 +12,8 @@
         "@default": true,
         "@cast": false
     },
-    "testFramework": "phpunit"
+    "testFramework": "phpunit",
+    "phpUnit": {
+        "customPath": "bin\/co-phpunit"
+    }
 }
