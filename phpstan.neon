@@ -1,9 +1,12 @@
 parameters:
     level: max
     paths:
-        - public
+        - bin
         - src
         - tests
+    excludePaths:
+      analyseAndScan:
+        - bin/tcp-client.php
     ignoreErrors:
         - '#Parameter \#1 \$message of method S3\\Tunnel\\Tcp\\Session\\EncryptedSession::encrypt\(\) expects object, mixed given.#'
         - '#Method S3\\Tunnel\\Tcp\\Session\\EncryptedSession::decrypt\(\) should return object but returns mixed.#'
@@ -15,3 +18,5 @@ parameters:
         - '#Cannot call method on\(\) on mixed.#'
         - '#Cannot access offset ''mailbox'' on mixed.#'
         - '#Function Swoole\\Coroutine\\run not found.#'
+        - '#Part \$pid \(mixed\) of encapsed string cannot be cast to string.#'
+        - '#Method S3\\Tunnel\\Support\\Watch::startProcess\(\) should return int but returns mixed.#'

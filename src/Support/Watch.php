@@ -1,31 +1,40 @@
 <?php
 
+declare(strict_types=1);
+
+namespace S3\Tunnel\Support;
+
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
+use RecursiveCallbackFilterIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use SplFileInfo;
 use Swoole\Process;
 
-require 'vendor/autoload.php';
-
-final class Inotify
+final class Watch
 {
-    private const MASK = IN_MODIFY | IN_CREATE | IN_MOVE | IN_DELETE;
+    private const int MASK = IN_MODIFY | IN_CREATE | IN_MOVE | IN_DELETE;
 
-    /** @var false|resource */
+    /** @var resource */
     private $inotify;
+    /** @var int[]  */
     private array $watching = [];
     private Logger $logger;
 
-    public function __construct(private readonly array $dirForWatch = [])
-    {
+    /** @param string[] $dirForWatch */
+    public function __construct(
+        private readonly array $dirForWatch = [],
+    ) {
         $this->inotify = inotify_init();
-        $this->logger = new Logger('inotify');
+        $this->logger = new Logger('watch-server');
         $this->logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
     }
 
-    public function start(): void
+    public function start(callable $callback): void
     {
-        $pid = $this->startProcess();
+        $pid = $this->startProcess($callback);
         $this->watching = $this->addWatch();
         while ($events = inotify_read($this->inotify)) {
             $namedEvents = array_filter($events, fn(array $event) => $event['name'] !== '');
@@ -33,16 +42,16 @@ final class Inotify
                 $this->logger->debug("Inotify: {$event['name']}");
                 Process::kill($pid, SIGINT);
                 sleep(1);
-                $pid = $this->startProcess();
+                $pid = $this->startProcess($callback);
                 $this->removeWatch();
                 $this->watching = $this->addWatch();
             }
         }
     }
 
-    private function startProcess(): int
+    private function startProcess(callable $callback): int
     {
-        $pid = (new Process(static fn () => require 'public/index.php'))->start();
+        $pid = (new Process($callback))->start();
         $this->logger->debug("Start with PID: $pid");
         return $pid;
     }
@@ -54,6 +63,7 @@ final class Inotify
         $this->logger->debug('Finish');
     }
 
+    /** @return int[] */
     private function addWatch(): array
     {
         $directories = [];
@@ -61,7 +71,7 @@ final class Inotify
             $directory = new RecursiveDirectoryIterator($d);
             $filter = new RecursiveCallbackFilterIterator(
                 $directory,
-                fn (SplFileInfo $fileInfo, $key, $iterator)=> $iterator->hasChildren() || ($fileInfo->isDir() && $fileInfo->getFilename() === '.')
+                fn(SplFileInfo $fileInfo, $key, $iterator) => $iterator->hasChildren() || ($fileInfo->isDir() && $fileInfo->getFilename() === '.')
             );
             $iterator = new RecursiveIteratorIterator($filter);
             $directories[] = $iterator;
@@ -71,7 +81,7 @@ final class Inotify
         /** @var RecursiveDirectoryIterator<SplFileInfo>[] $directories */
         foreach ($directories as $files) {
             foreach ($files as $file) {
-                $watching[] = inotify_add_watch($this->inotify, $file->getPath(), self::MASK);
+                $watching[] = (int)inotify_add_watch($this->inotify, $file->getPath(), self::MASK);
             }
         }
         return $watching;
@@ -84,5 +94,3 @@ final class Inotify
         }
     }
 }
-
-(new Inotify(dirForWatch: ['public', 'src', 'templates']))->start();

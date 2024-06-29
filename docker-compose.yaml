@@ -17,7 +17,7 @@ services:
       - TZ=America/Sao_Paulo,
       - XDEBUG_MODE=off
     restart: unless-stopped
-    command: php bin/inotify.php
+    command: php bin/server.php
     working_dir: /app
     volumes:
       - ./:/app
