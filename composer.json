@@ -46,8 +46,8 @@
         "phpcs": "XDEBUG_MODE=off phpcs",
         "phpstan": "XDEBUG_MODE=off phpstan analyse --memory-limit=-1",
         "test": "XDEBUG_MODE=off phpunit",
-        "test-coverage": "XDEBUG_MODE=coverage phpunit --coverage-html vendor/a_coverage/",
-        "test-infection": "XDEBUG_MODE=coverage infection"
+        "test-coverage": "phpunit --coverage-html vendor/a_coverage/",
+        "test-infection": "infection"
     },
     "config": {
         "allow-plugins": {

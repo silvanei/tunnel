@@ -22,15 +22,19 @@ RUN set -e \
     && docker-php-ext-install \
         pdo_mysql \
         bcmath \
+        opcache \
+    && echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini \
     && pecl install \
         sockets \
         inotify \
         xdebug \
+        pcov \
     && pecl install --configureoptions 'enable-openssl="yes" enable-hook-curl="yes"' swoole \
     && docker-php-ext-enable \
         inotify \
         swoole \
         xdebug \
+        pcov \
     #   Clear install
     && composer clear-cache \
     && apk del --no-network .phpize-deps \
