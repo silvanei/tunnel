@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php declare(strict_types=1);
+
+use Swoole\Coroutine;
+use Swoole\ExitException;
+
+chdir(dirname(__DIR__));
+
+Coroutine::set([
+    'hook_flags' => SWOOLE_HOOK_ALL,
+    'exit_condition' => static fn () => Coroutine::stats()['coroutine_num'] === 0
+]);
+
+$code = 0;
+Coroutine\run(function () use(&$code) {
+    try {
+        require 'vendor/bin/phpunit';
+    } catch (ExitException $exception) {
+        $code = $exception->getCode();
+    }
+});
+exit($code);

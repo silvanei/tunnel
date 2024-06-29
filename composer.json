@@ -43,10 +43,10 @@
             "@phpstan",
             "@test"
         ],
-        "phpcs": "XDEBUG_MODE=off phpcs",
-        "phpstan": "XDEBUG_MODE=off phpstan analyse --memory-limit=-1",
-        "test": "XDEBUG_MODE=off phpunit",
-        "test-coverage": "phpunit --coverage-html vendor/a_coverage/",
+        "phpcs": "phpcs",
+        "phpstan": "phpstan analyse --memory-limit=-1",
+        "test": "bin/co-phpunit",
+        "test-coverage": "bin/co-phpunit --coverage-html vendor/a_coverage/",
         "test-infection": "infection"
     },
     "config": {

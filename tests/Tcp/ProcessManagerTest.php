@@ -13,35 +13,29 @@ final class ProcessManagerTest extends TestCase
 {
     public function testSpawnShouldCreateCoroutineProcess(): void
     {
-        Coroutine\run(function () {
-            $coroutineId = ProcessManager::spawn(fn (Channel $mailbox) => $mailbox->pop());
-            Coroutine::defer(static fn () => Coroutine::cancel($coroutineId));
+        $coroutineId = ProcessManager::spawn(fn (Channel $mailbox) => $mailbox->pop());
+        Coroutine::defer(static fn () => Coroutine::cancel($coroutineId));
 
-            $this->assertTrue(Coroutine::exists($coroutineId));
-        });
+        $this->assertTrue(Coroutine::exists($coroutineId));
     }
 
     public function testSendShouldSendMessageToProcess(): void
     {
-        Coroutine\run(function () {
-            $coroutineId = ProcessManager::spawn(
-                fn (Channel $mailbox) => $this->assertSame('some message', $mailbox->pop())
-            );
+        $coroutineId = ProcessManager::spawn(
+            fn (Channel $mailbox) => $this->assertSame('some message', $mailbox->pop())
+        );
 
-            ProcessManager::send($coroutineId, 'some message');
-        });
+        ProcessManager::send($coroutineId, 'some message');
     }
 
     public function testKillShouldKillProcess(): void
     {
-        Coroutine\run(function () {
-            $coroutineId = ProcessManager::spawn(fn (Channel $mailbox) => $mailbox->pop());
+        $coroutineId = ProcessManager::spawn(fn (Channel $mailbox) => $mailbox->pop());
 
-            $this->assertTrue(Coroutine::exists($coroutineId));
+        $this->assertTrue(Coroutine::exists($coroutineId));
 
-            ProcessManager::kill($coroutineId);
+        ProcessManager::kill($coroutineId);
 
-            $this->assertFalse(Coroutine::exists($coroutineId));
-        });
+        $this->assertFalse(Coroutine::exists($coroutineId));
     }
 }
