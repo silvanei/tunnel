@@ -20,7 +20,7 @@ use Swoole\Http\Server as HttpServer;
 final class TcpServer
 {
     /** @var array<int, callable[]> */
-    private array $onConnectionClose;
+    private array $onConnectionClose = [];
 
     public function __construct(
         private readonly LoggerInterface $logger,
@@ -45,7 +45,7 @@ final class TcpServer
         $message = TcpPacker::unpack($data);
         $message = $encryptedSession->decrypt($message);
         match ($message::class) {
-            AuthMessage::class => $this->handleAuthMessage($server, $fd, $message),
+            AuthMessage::class => $this->handleAuthMessage($encryptedSession, $server, $fd, $message),
             ResponseMessage::class => $this->handleResponseMessage($message),
             default => $server->close($fd),
         };
@@ -61,14 +61,9 @@ final class TcpServer
         $this->logger->debug("Session $fd disconnected");
     }
 
-    private function handleAuthMessage(HttpServer $server, int $fd, AuthMessage $message): void
+    private function handleAuthMessage(EncryptedSession $encryptedSession, HttpServer $server, int $fd, AuthMessage $message): void
     {
         $this->logger->debug('Receive auth message', (array)$message);
-        $encryptedSession = EncryptedSessionContext::get($fd);
-        if (! $encryptedSession) {
-            $this->logger->critical('Session not encrypted');
-            return;
-        }
 
         if ($this->gitHubService->validateToken($message->accessToken)) {
             $tcpSenderCoroutineId = ProcessManager::spawn(static function (Channel $mailbox) use ($server, $fd, $encryptedSession) {
@@ -87,6 +82,7 @@ final class TcpServer
             return;
         }
 
+        $this->logger->debug('Sending By message');
         $goodByMessage = $encryptedSession->encrypt(new GoodByMessage('Bye'));
         $server->send($fd, TcpPacker::pack($goodByMessage));
         $server->close($fd);
