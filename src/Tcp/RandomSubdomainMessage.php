@@ -18,6 +18,6 @@ final readonly class RandomSubdomainMessage
             $bytes = random_bytes(max(1, (int)$bytesSize));
             $string .= substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $size);
         }
-        $this->value = 'd4kpzt3v9b'; //strtolower($string);
+        $this->value = strtolower($string);
     }
 }
