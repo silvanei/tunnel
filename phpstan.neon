@@ -19,3 +19,6 @@ parameters:
         - '#Cannot access offset ''mailbox'' on mixed.#'
         - '#Part \$pid \(mixed\) of encapsed string cannot be cast to string.#'
         - '#Method S3\\Tunnel\\Support\\Watch::startProcess\(\) should return int but returns mixed.#'
+        - '#While loop condition is always true.#'
+        - '#Parameter \#1 \$data of static method S3\\Tunnel\\Tcp\\TcpPacker::unpack\(\) expects string, mixed given.#'
+        - '#Parameter \$accessToken of class S3\\Tunnel\\Tcp\\Message\\AuthMessage constructor expects string, string\|false given.#'

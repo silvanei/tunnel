@@ -27,13 +27,16 @@ require 'vendor/autoload.php';
 
         $swooleResponse->setStatusCode(200);
         $swooleResponse->setHeader('Content-Type', 'application/json');
-        $swooleResponse->end(json_encode([
-            'method' => $swooleRequest->getMethod(),
-            'path' => $swooleRequest->server['request_uri'],
-            'headers' => $swooleRequest->header,
-            'parsedQueryParams' => $swooleRequest->get,
-            'rawContent' => $swooleRequest->rawContent(),
-        ]));
+        $swooleResponse->end(json_encode(
+            [
+                'method' => $swooleRequest->getMethod(),
+                'path' => $swooleRequest->server['request_uri'],
+                'headers' => $swooleRequest->header,
+                'parsedQueryParams' => $swooleRequest->get,
+                'rawContent' => $swooleRequest->rawContent(),
+            ],
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+        ));
     });
 
     $http->start();

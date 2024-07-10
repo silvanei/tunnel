@@ -25,7 +25,9 @@ services:
   tunnel-client:
     <<: *tunnel
     container_name: "tunnel-client"
-    command: php bin/tcp-client.php
+    command: php client/bin/server.php
+    ports:
+      - "127.0.0.1:9505:9505"
   
   echo-server:
     <<: *tunnel
