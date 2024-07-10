@@ -7,20 +7,20 @@ namespace Test\S3\Tunnel\Tcp;
 use Mockery;
 use Mockery\MockInterface;
 use Psr\Log\LoggerInterface;
-use S3\Tunnel\Tcp\TcpPacker;
-use S3\Tunnel\Tcp\TcpServer;
-use Swoole\Http\Server as HttpServer;
 use S3\Tunnel\Shared\GitHub\GitHubService;
 use S3\Tunnel\Tcp\Message\AuthMessage;
 use S3\Tunnel\Tcp\Message\GoodByMessage;
+use S3\Tunnel\Tcp\Message\RandomSubdomainMessage;
 use S3\Tunnel\Tcp\Message\ResponseMessage;
-use S3\Tunnel\Tcp\RandomSubdomainMessage;
 use S3\Tunnel\Tcp\Request\DispatchRequestMessageContext;
 use S3\Tunnel\Tcp\ResponseMessageChannel;
 use S3\Tunnel\Tcp\Session\EncryptedSession;
 use S3\Tunnel\Tcp\Session\EncryptedSessionContext;
 use S3\Tunnel\Tcp\Session\SimpleCryptBox;
+use S3\Tunnel\Tcp\TcpPacker;
+use S3\Tunnel\Tcp\TcpServer;
 use stdClass;
+use Swoole\Http\Server as HttpServer;
 use Test\S3\Tunnel\TunnelTestCase;
 
 class TcpServerTest extends TunnelTestCase

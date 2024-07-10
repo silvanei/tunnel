@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use S3\Tunnel\Shared\GitHub\GitHubService;
 use S3\Tunnel\Tcp\Message\AuthMessage;
 use S3\Tunnel\Tcp\Message\GoodByMessage;
+use S3\Tunnel\Tcp\Message\RandomSubdomainMessage;
 use S3\Tunnel\Tcp\Message\ResponseMessage;
 use S3\Tunnel\Tcp\Request\DispatchRequestMessage;
 use S3\Tunnel\Tcp\Request\DispatchRequestMessageContext;

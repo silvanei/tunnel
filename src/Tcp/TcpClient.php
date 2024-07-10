@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use S3\Tunnel\Tcp\Message\AuthMessage;
 use S3\Tunnel\Tcp\Message\GoodByMessage;
+use S3\Tunnel\Tcp\Message\RandomSubdomainMessage;
 use S3\Tunnel\Tcp\Message\RequestMessage;
 use S3\Tunnel\Tcp\Message\ResponseMessage;
 use S3\Tunnel\Tcp\Session\EncryptedSession;
