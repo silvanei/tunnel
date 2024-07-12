@@ -20,6 +20,7 @@ require '../vendor/autoload.php';
     $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
 
     $eventChannel = new Channel(100);
+    $randomSubDomainChannel = new Channel(1);
     $tcpClient = new TcpClient($logger, $eventChannel);
     $streamConnection = [];
 
@@ -39,8 +40,8 @@ require '../vendor/autoload.php';
         $logger->debug("Close connection $fd");
         unset($streamConnection[$fd]);
     });
-    $http->on(Constant::EVENT_REQUEST, static function (Request $request, Response $response) use ($http, $eventChannel, $logger, &$streamConnection) {
-        if ($request->server['request_uri'] == '/transactions') {
+    $http->on(Constant::EVENT_REQUEST, static function (Request $request, Response $response) use ($http, $eventChannel, $randomSubDomainChannel, $logger, &$streamConnection) {
+        if ($request->server['request_uri'] == '/stream') {
             $response->header("Content-Type", "text/event-stream");
             $response->header("Cache-Control", "no-cache");
             $response->header("Connection", "keep-alive");
@@ -53,17 +54,31 @@ require '../vendor/autoload.php';
             return;
         }
 
+        if ($request->server['request_uri'] == '/random-subdomain') {
+            $randomSubDomain = $randomSubDomainChannel->pop();
+            $response->status(200);
+            $response->header('Content-Type', 'text/plain');
+            $response->end($randomSubDomain);
+            $randomSubDomainChannel->push($randomSubDomain);
+        }
+
         $response->status(404);
         $response->end();
     });
-    $http->on(Constant::EVENT_START, static function (Server $server) use (&$streamConnection, $tcpClient, $eventChannel) {
+    $http->on(Constant::EVENT_START, static function (Server $server) use (&$streamConnection, $tcpClient, $eventChannel, $randomSubDomainChannel) {
         go($tcpClient->start(...));
-        go(function () use (&$streamConnection, $eventChannel, $server) {
+        go(function () use (&$streamConnection, $eventChannel, $randomSubDomainChannel, $server) {
             while ($event = $eventChannel->pop()) {
+                if ($event['event'] === 'random-subdomain') {
+                    if ($randomSubDomainChannel->isFull()) {
+                        $randomSubDomainChannel->pop();
+                    }
+                    $randomSubDomainChannel->push($event['uri']);
+                }
                 foreach ($streamConnection as $fd) {
                     $data = "id: {$event['requestId']}\n";
+                    $data .= "event: {$event['event']}\n";
                     $data .= 'data: ' . json_encode($event) . "\n\n";
-
                     $server->send($fd, $data);
                 }
             }

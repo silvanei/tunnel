@@ -10,18 +10,29 @@
         window.addEventListener("load", init)
 
         function init(event) {
+            getSubDomain();
             for (let key = 0; key < localStorage.length; key++) {
                 let item = localStorage.getItem(localStorage.key(key))
                 addItem(JSON.parse(item))
             }
 
-            const source = new EventSource("/transactions");
-            source.onmessage = function(event) {
+            const source = new EventSource("/stream");
+            source.addEventListener('transaction', function(event) {
                 let data = JSON.parse(event.data);
                 localStorage.setItem(data.requestId, JSON.stringify(data))
                 addItem(data)
+            });
+            source.addEventListener('random-subdomain', function(event) {
+                let data = JSON.parse(event.data);
+                document.getElementById('random-subdomain').innerText = data.uri
+            });
+        }
 
-            };
+        async function getSubDomain() {
+            const response = await fetch('/random-subdomain');
+            if (response.ok) {
+                document.getElementById('random-subdomain').innerText = await response.text()
+            }
         }
 
         function addItem(data) {
@@ -54,6 +65,7 @@
         <nav class="navbar bg-body-tertiary mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand">Tunnel</a>
+                <span id="random-subdomain"></span>
                 <button onclick="clearLogs()" class="btn btn-outline-success">Clear logs</button>
             </div>
         </nav>

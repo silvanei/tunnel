@@ -10,7 +10,6 @@ endif
 DOCKER_CONTAINER_RUN=docker container run \
 	$(ITERATIVE) \
 	--rm \
-	--cpus=.5 \
 	--network host \
 	-m 1024m \
 	-u $(USER_ID):$(USER_GROUP) \
@@ -27,7 +26,7 @@ install:
 	$(DOCKER_CONTAINER_RUN) composer install
 
 serve:
-	docker compose up
+	docker compose --profile dev up
 
 sh:
 	$(DOCKER_CONTAINER_RUN) sh
