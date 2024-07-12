@@ -62,10 +62,7 @@ final readonly class HttpServer
 
     private function extractSubdomain(Request $request): string
     {
-        $domain = getenv('SERVER_DOMAIN');
-        if (! is_string($domain)) {
-            $domain = 'tunnel.localhost';
-        }
+        $domain = getenv('SERVER_DOMAIN') ?: 'tunnel.localhost';
         preg_match("/(?<subdomain>.*).$domain/", $request->header['host'], $matches);
         return $matches['subdomain'] ?? '';
     }
