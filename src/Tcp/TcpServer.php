@@ -64,7 +64,7 @@ final class TcpServer
 
     private function handleAuthMessage(EncryptedSession $encryptedSession, HttpServer $server, int $fd, AuthMessage $message): void
     {
-        $this->logger->debug('Receive auth message', (array)$message);
+        $this->logger->debug('Receive auth message');
 
         if ($this->gitHubService->validateToken($message->accessToken)) {
             $tcpSenderCoroutineId = ProcessManager::spawn(static function (Channel $mailbox) use ($server, $fd, $encryptedSession) {
