@@ -16,7 +16,7 @@ Coroutine\run(static function () use (&$code) {
     try {
         require 'vendor/bin/phpunit';
     } catch (ExitException $exception) {
-        $code = $exception->getCode();
+        $code = $exception->getStatus();
     }
 });
 exit($code);

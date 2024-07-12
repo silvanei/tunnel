@@ -81,7 +81,7 @@ class TcpServerTest extends TunnelTestCase
         $encryptedAuthMessage = $this->clientEncryptedSession->encrypt($authMessage = new AuthMessage(accessToken: 'fake-access-token'));
 
         $this->gitHubService->shouldReceive('validateToken')->once()->with('fake-access-token')->andReturnTrue();
-        $this->logger->shouldReceive('debug')->once()->with('Receive auth message', ['accessToken' => 'fake-access-token']);
+        $this->logger->shouldReceive('debug')->once()->with('Receive auth message');
         $this->logger->shouldReceive('debug')->once()->with('Client authenticated');
         $expectedRandomSubdomain = null;
         $this->httpServer->shouldReceive('send')->once()->withArgs(function ($fd, $randomSubdomain) use (&$expectedRandomSubdomain) {
@@ -108,7 +108,7 @@ class TcpServerTest extends TunnelTestCase
         $encryptedAuthMessage = $this->clientEncryptedSession->encrypt($authMessage);
 
         $this->gitHubService->shouldReceive('validateToken')->once()->with('fake-invalid-access-token')->andReturnFalse();
-        $this->logger->shouldReceive('debug')->once()->with('Receive auth message', ['accessToken' => 'fake-invalid-access-token']);
+        $this->logger->shouldReceive('debug')->once()->with('Receive auth message');
         $this->logger->shouldReceive('debug')->once()->with('Sending By message');
         $expectedGoodByMessage = null;
         $this->httpServer->shouldReceive('send')->once()->withArgs(function ($fd, $goodByMessage) use (&$expectedGoodByMessage) {

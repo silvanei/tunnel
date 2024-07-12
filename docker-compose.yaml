@@ -10,18 +10,6 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
-  nginx:
-    profiles:
-      - dev
-    image: nginx:latest
-    container_name: "nginx"
-    environment:
-      - TZ=America/Sao_Paulo
-    ports:
-      - "9500:9500"
-    restart: unless-stopped
-    volumes:
-      - ./.docker/nginx/nginx.conf:/etc/nginx/nginx.conf
 
   tunnel-client:
     profiles:
