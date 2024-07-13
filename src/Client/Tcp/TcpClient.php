@@ -51,7 +51,7 @@ final class TcpClient
             if (is_string($received) && strlen($received) > 0) {
                 $message = TcpPacker::unpack($received);
                 $message = $this->encryptedSession->decrypt($message);
-                $this->logger->debug('Receive', (array)$message);
+                $this->logger->debug(sprintf('Receive %s message', $message::class), (array)$message);
                 match ($message::class) {
                     GoodByMessage::class => $this->goodBye($message),
                     RandomSubdomainMessage::class => $this->randomSubdomainMessage($message),
@@ -114,21 +114,24 @@ final class TcpClient
             Constant::OPTION_LOG_LEVEL => SWOOLE_LOG_DEBUG,
         ]);
         while (! $this->client->connect($host, 9502)) {
-            $this->logger->debug('Try connect!!!');
-            $this->logger->debug($this->client->errMsg);
+            $this->logger->info('Try connect!!!');
+            $this->logger->error($this->client->errMsg);
             sleep(2);
         }
+        $this->logger->info("Connected on $host:9502");
 
         $cryptoBox = new SimpleCryptBox();
         $this->client->send(TcpPacker::pack($cryptoBox->boxPublicKey));
+        $this->logger->debug('Send public key to server');
 
         $serverPublicKey = TcpPacker::unpack($this->client->recv());
-        $this->logger->debug('Receive public key');
+        $this->logger->debug('Receive public key from server');
 
         $this->encryptedSession = new EncryptedSession($cryptoBox, $serverPublicKey);
         $authMessage = new AuthMessage($this->accessToken);
-        $authMessage = $this->encryptedSession->encrypt($authMessage);
-        $this->client->send(TcpPacker::pack($authMessage));
+        $encryptedAuthMessage = $this->encryptedSession->encrypt($authMessage);
+        $this->client->send(TcpPacker::pack($encryptedAuthMessage));
+        $this->logger->debug('Send auth message to server', (array)$authMessage);
     }
 
     private function randomSubdomainMessage(RandomSubdomainMessage $message): void
@@ -139,8 +142,8 @@ final class TcpClient
             default => ":$port",
         };
 
-        $this->logger->debug('http://127.0.0.1:9505/');
-        $this->logger->debug("$schema://$message->value.$host{$port}");
+        $this->logger->info('http://127.0.0.1:9505/');
+        $this->logger->info("$schema://$message->value.$host{$port}");
 
         $this->eventChannel->push([
             'requestId' => $message->value,
@@ -152,7 +155,7 @@ final class TcpClient
 
     private function goodBye(GoodByMessage $message): void
     {
-        $this->logger->debug($message->body);
+        $this->logger->info('Receive good by message', (array)$message);
         $this->client->close();
     }
 

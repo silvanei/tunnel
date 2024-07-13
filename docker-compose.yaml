@@ -19,6 +19,9 @@ services:
     command: php client/bin/server.php
     ports:
       - "127.0.0.1:9505:9505"
+    depends_on:
+      - tunnel-server
+      - echo-server
   
   echo-server:
     profiles:
@@ -26,3 +29,5 @@ services:
     <<: *tunnel
     container_name: "echo-server"
     command: php .docker/echo-server/echo-server.php
+    environment:
+      - LOG_LEVEL=Debug

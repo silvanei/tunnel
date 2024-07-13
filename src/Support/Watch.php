@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace S3\Tunnel\Support;
 
-use Monolog\Handler\StreamHandler;
-use Monolog\Level;
-use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use S3\Tunnel\Shared\Logger\Logger;
 use SplFileInfo;
 use Swoole\Process;
 
@@ -21,7 +20,7 @@ final class Watch
     private $inotify;
     /** @var int[]  */
     private array $watching = [];
-    private Logger $logger;
+    private LoggerInterface $logger;
 
     /** @param string[] $dirForWatch */
     public function __construct(
@@ -29,7 +28,6 @@ final class Watch
     ) {
         $this->inotify = inotify_init();
         $this->logger = new Logger('watch-server');
-        $this->logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
     }
 
     public function start(callable $callback): void
