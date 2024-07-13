@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-use Monolog\Handler\StreamHandler;
-use Monolog\Level;
-use Monolog\Logger;
 use S3\Tunnel\Client\Tcp\TcpClient;
+use S3\Tunnel\Shared\Logger\Logger;
 use Swoole\Constant;
 use Swoole\Coroutine\Channel;
 use Swoole\Http\Request;
@@ -16,8 +14,6 @@ chdir(dirname(__DIR__));
 require '../vendor/autoload.php';
 (function () {
     $logger = new Logger('http-server-client');
-    $logger->useLoggingLoopDetection(detectCycles: false);
-    $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
 
     $eventChannel = new Channel(100);
     $randomSubDomainChannel = new Channel(1);
@@ -37,7 +33,7 @@ require '../vendor/autoload.php';
         Constant::OPTION_HTTP_COMPRESSION_LEVEL => 5,
     ]);
     $http->on(Constant::EVENT_CLOSE, static function (Server $server, int $fd, int $reactorId) use (&$streamConnection, $logger) {
-        $logger->debug("Close connection $fd");
+        $logger->info("Close connection $fd");
         unset($streamConnection[$fd]);
     });
     $http->on(Constant::EVENT_REQUEST, static function (Request $request, Response $response) use ($http, $eventChannel, $randomSubDomainChannel, $logger, &$streamConnection) {
@@ -50,7 +46,7 @@ require '../vendor/autoload.php';
             $response->header("Content-Length", '');
             $response->end();
             $streamConnection[$response->fd] = $response->fd;
-            $logger->debug("Create a new stream: $response->fd");
+            $logger->info("Create a new stream: $response->fd");
             return;
         }
 

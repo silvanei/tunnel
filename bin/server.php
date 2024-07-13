@@ -2,24 +2,20 @@
 
 declare(strict_types=1);
 
-use Monolog\Handler\StreamHandler;
-use Monolog\Level;
-use Monolog\Logger;
 use S3\Tunnel\Server\Http\Controller\TcpDispatchAction;
 use S3\Tunnel\Server\Http\HttpServer;
 use S3\Tunnel\Server\Tcp\TcpServer;
 use S3\Tunnel\Shared\GitHub\GitHubService;
+use S3\Tunnel\Shared\Logger\Logger;
 use Swoole\Constant;
 use Swoole\Http\Server;
 
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 (function () {
-    $logger = new Logger('http-server');
-    $logger->useLoggingLoopDetection(detectCycles: false);
-    $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
     $githubService = new GithubService();
 
+    $httpLogger = new Logger('http-server');
     $httpServer = new HttpServer(new TcpDispatchAction(), $githubService);
     $http = new Server('0.0.0.0', 9501);
     $http->set([
@@ -29,11 +25,8 @@ require 'vendor/autoload.php';
     ]);
     $http->on(Constant::EVENT_REQUEST, $httpServer->request(...));
 
-    $logger = new Logger('tcp-server');
-    $logger->useLoggingLoopDetection(detectCycles: false);
-    $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
-
-    $tcpServer = new TcpServer($logger, $githubService);
+    $tcpLogger = new Logger('tcp-server');
+    $tcpServer = new TcpServer($tcpLogger, $githubService);
     $tcp = $http->listen('0.0.0.0', 9502, SWOOLE_TCP);
     $tcp->set([
         Constant::OPTION_LOG_LEVEL => SWOOLE_LOG_DEBUG,
@@ -46,5 +39,7 @@ require 'vendor/autoload.php';
     $tcp->on(Constant::EVENT_CLOSE, $tcpServer->close(...));
     $tcp->on(Constant::EVENT_RECEIVE, $tcpServer->receive(...));
 
+    $httpLogger->info('http-server listen on 0.0.0.0:9501');
+    $tcpLogger->info('tcp-server listen on 0.0.0.0:9502');
     $http->start();
 })();

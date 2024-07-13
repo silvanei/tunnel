@@ -23,7 +23,7 @@ final readonly class DispatchRequestMessage
 
     public function dispatch(RequestMessage $message, float $timeout = 30): ResponseInterface
     {
-        $this->logger->debug('IDA', (array)$message);
+        $this->logger->debug('Send request message', (array)$message);
 
         $channel = ResponseMessageChannel::create($message->requestId);
         Coroutine::defer(static fn() => ResponseMessageChannel::delete($message->requestId));
@@ -32,7 +32,7 @@ final readonly class DispatchRequestMessage
 
         /** @var ResponseMessage $response */
         $response = $channel->pop($timeout);
-        $this->logger->debug('VOLTA', (array)$response);
+        $this->logger->debug('Receive response message', (array)$response);
 
         return match ($channel->errCode) {
             SWOOLE_CHANNEL_OK => new Response(

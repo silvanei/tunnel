@@ -34,13 +34,14 @@ final class TcpServer
     {
         $encryptedSession = EncryptedSessionContext::get($fd);
         if (! $encryptedSession) {
-            $this->logger->debug('Receive public key');
+            $this->logger->debug('Receive public key from client');
 
             $cryptoBox = new SimpleCryptBox();
             $publicKey = TcpPacker::unpack($data);
             EncryptedSessionContext::set($fd, new EncryptedSession($cryptoBox, $publicKey));
             $this->defferConnectionClose($fd, EncryptedSessionContext::delete(...));
             $server->send($fd, TcpPacker::pack($cryptoBox->boxPublicKey));
+            $this->logger->debug('Send public key to client');
             return;
         }
 
@@ -60,12 +61,12 @@ final class TcpServer
         }
         unset($this->onConnectionClose[$fd]);
 
-        $this->logger->debug("Session $fd disconnected");
+        $this->logger->info("Session $fd disconnected");
     }
 
     private function handleAuthMessage(EncryptedSession $encryptedSession, HttpServer $server, int $fd, AuthMessage $message): void
     {
-        $this->logger->debug('Receive auth message');
+        $this->logger->debug('Receive auth message from client', (array)$message);
 
         if ($this->gitHubService->validateToken($message->accessToken)) {
             $tcpSenderCoroutineId = ProcessManager::spawn(static function (Channel $mailbox) use ($server, $fd, $encryptedSession) {

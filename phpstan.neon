@@ -21,3 +21,5 @@ parameters:
         - '#Method S3\\Tunnel\\Support\\Watch::startProcess\(\) should return int but returns mixed.#'
         - '#While loop condition is always true.#'
         - '#Parameter \#1 \$data of static method S3\\Tunnel\\Shared\\Tcp\\TcpPacker::unpack\(\) expects string, mixed given.#'
+        - '#Method S3\\Tunnel\\Shared\\Logger\\Logger::log\(\) has parameter \$context with no value type specified in iterable type array.#'
+        - '#Parameter \#1 \$name of static method Monolog\\Level::fromName\(\) expects#'

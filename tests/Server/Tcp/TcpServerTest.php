@@ -55,7 +55,8 @@ class TcpServerTest extends TunnelTestCase
         $message->foo = 'Testing session encrypt and decrypt';
         $clientCryptoBox = new SimpleCryptBox();
 
-        $this->logger->shouldReceive('debug')->once()->with('Receive public key');
+        $this->logger->shouldReceive('debug')->once()->with('Receive public key from client');
+        $this->logger->shouldReceive('debug')->once()->with('Send public key to client');
         $clientEncryptedSession = null;
         $this->httpServer->shouldReceive('send')->once()->withArgs(function ($fd, $publicKey) use (&$clientEncryptedSession, $clientCryptoBox) {
             $clientEncryptedSession = new EncryptedSession($clientCryptoBox, TcpPacker::unpack($publicKey));
@@ -70,7 +71,7 @@ class TcpServerTest extends TunnelTestCase
             $clientEncryptedSession?->decrypt($serverEncryptedSession->encrypt($message)),
         );
 
-        $this->logger->shouldReceive('debug')->once()->with("Session $fd disconnected");
+        $this->logger->shouldReceive('info')->once()->with("Session $fd disconnected");
         $this->simulateTcpServerClose($fd);
         $this->assertNull(EncryptedSessionContext::get($fd));
     }
@@ -81,7 +82,7 @@ class TcpServerTest extends TunnelTestCase
         $encryptedAuthMessage = $this->clientEncryptedSession->encrypt($authMessage = new AuthMessage(accessToken: 'fake-access-token'));
 
         $this->gitHubService->shouldReceive('validateToken')->once()->with('fake-access-token')->andReturnTrue();
-        $this->logger->shouldReceive('debug')->once()->with('Receive auth message');
+        $this->logger->shouldReceive('debug')->once()->with('Receive auth message from client', (array)$authMessage);
         $this->logger->shouldReceive('debug')->once()->with('Client authenticated');
         $expectedRandomSubdomain = null;
         $this->httpServer->shouldReceive('send')->once()->withArgs(function ($fd, $randomSubdomain) use (&$expectedRandomSubdomain) {
@@ -96,7 +97,7 @@ class TcpServerTest extends TunnelTestCase
         $this->assertEquals($authMessage, $this->serverEncryptedSession->decrypt($encryptedAuthMessage));
         $this->assertNotNull(DispatchRequestMessageContext::get((string)$expectedRandomSubdomain?->value));
 
-        $this->logger->shouldReceive('debug')->once()->with("Session $fd disconnected");
+        $this->logger->shouldReceive('info')->once()->with("Session $fd disconnected");
         $this->simulateTcpServerClose($fd);
         $this->assertNull(DispatchRequestMessageContext::get((string)$expectedRandomSubdomain?->value));
     }
@@ -108,7 +109,7 @@ class TcpServerTest extends TunnelTestCase
         $encryptedAuthMessage = $this->clientEncryptedSession->encrypt($authMessage);
 
         $this->gitHubService->shouldReceive('validateToken')->once()->with('fake-invalid-access-token')->andReturnFalse();
-        $this->logger->shouldReceive('debug')->once()->with('Receive auth message');
+        $this->logger->shouldReceive('debug')->once()->with('Receive auth message from client', (array)$authMessage);
         $this->logger->shouldReceive('debug')->once()->with('Sending By message');
         $expectedGoodByMessage = null;
         $this->httpServer->shouldReceive('send')->once()->withArgs(function ($fd, $goodByMessage) use (&$expectedGoodByMessage) {
