@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
-use S3\Tunnel\Http\Controller\TcpDispatchAction;
-use S3\Tunnel\Http\HttpServer;
+use S3\Tunnel\Server\Http\Controller\TcpDispatchAction;
+use S3\Tunnel\Server\Http\HttpServer;
+use S3\Tunnel\Server\Tcp\TcpServer;
 use S3\Tunnel\Shared\GitHub\GitHubService;
-use S3\Tunnel\Tcp\TcpServer;
 use Swoole\Constant;
 use Swoole\Http\Server;
 

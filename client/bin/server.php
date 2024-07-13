@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
-use S3\Tunnel\Tcp\TcpClient;
+use S3\Tunnel\Client\Tcp\TcpClient;
 use Swoole\Constant;
 use Swoole\Coroutine\Channel;
 use Swoole\Http\Request;
