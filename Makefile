@@ -28,6 +28,9 @@ install:
 serve:
 	docker compose --profile dev up
 
+down:
+	docker compose --profile dev down
+
 sh:
 	$(DOCKER_CONTAINER_RUN) sh
 
