@@ -8,7 +8,6 @@ use Psr\Log\LoggerInterface;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use S3\Tunnel\Shared\Logger\Logger;
 use SplFileInfo;
 use Swoole\Process;
 
@@ -20,14 +19,14 @@ final class Watch
     private $inotify;
     /** @var int[]  */
     private array $watching = [];
-    private LoggerInterface $logger;
 
     /** @param string[] $dirForWatch */
     public function __construct(
+        private readonly LoggerInterface $logger,
         private readonly array $dirForWatch = [],
+        private readonly int $sleep = 0,
     ) {
         $this->inotify = inotify_init();
-        $this->logger = new Logger('watch-server');
     }
 
     public function start(callable $callback): void
@@ -35,22 +34,24 @@ final class Watch
         $pid = $this->startProcess($callback);
         $this->watching = $this->addWatch();
         while ($events = inotify_read($this->inotify)) {
-            $namedEvents = array_filter($events, fn(array $event) => $event['name'] !== '');
+            $namedEvents = array_map(fn(array $event) => $event['name'], $events);
+            $namedEvents = array_unique($namedEvents);
+            $namedEvents = array_filter($namedEvents, fn(string $event) => $event !== '' && ! str_ends_with($event, '~'));
             foreach ($namedEvents as $event) {
-                $this->logger->debug("Inotify: {$event['name']}");
+                $this->logger->debug("Inotify: $event");
                 Process::kill($pid, SIGINT);
-                sleep(1);
                 $pid = $this->startProcess($callback);
-                $this->removeWatch();
-                $this->watching = $this->addWatch();
             }
         }
     }
 
     private function startProcess(callable $callback): int
     {
+        $this->removeWatch();
+        sleep($this->sleep);
         $pid = (new Process($callback))->start();
         $this->logger->debug("Start with PID: $pid");
+        $this->watching = $this->addWatch();
         return $pid;
     }
 

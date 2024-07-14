@@ -11,13 +11,14 @@ use Swoole\Http\Response;
 use Swoole\Http\Server;
 
 chdir(dirname(__DIR__));
-require '../vendor/autoload.php';
+require 'vendor/autoload.php';
 (function () {
     $logger = new Logger('http-server-client');
 
     $eventChannel = new Channel(100);
     $randomSubDomainChannel = new Channel(1);
     $tcpClient = new TcpClient($logger, $eventChannel);
+    /** @var int[] $streamConnection */
     $streamConnection = [];
 
     $http = new Server('0.0.0.0', 9505);
@@ -26,7 +27,7 @@ require '../vendor/autoload.php';
         Constant::OPTION_HOOK_FLAGS => SWOOLE_HOOK_ALL,
         Constant::OPTION_OPEN_HTTP2_PROTOCOL => true,
         Constant::OPTION_ENABLE_STATIC_HANDLER => true,
-        Constant::OPTION_DOCUMENT_ROOT => dirname(__DIR__) . '/public',
+        Constant::OPTION_DOCUMENT_ROOT => 'client/public',
         Constant::OPTION_HTTP_AUTOINDEX => true,
         Constant::OPTION_HTTP_INDEX_FILES => ['index.html'],
         Constant::OPTION_HTTP_COMPRESSION => true,
@@ -36,14 +37,14 @@ require '../vendor/autoload.php';
         $logger->info("Close connection $fd");
         unset($streamConnection[$fd]);
     });
-    $http->on(Constant::EVENT_REQUEST, static function (Request $request, Response $response) use ($http, $eventChannel, $randomSubDomainChannel, $logger, &$streamConnection) {
+    $http->on(Constant::EVENT_REQUEST, static function (Request $request, Response $response) use ($randomSubDomainChannel, $logger, &$streamConnection) {
         if ($request->server['request_uri'] == '/stream') {
-            $response->header("Content-Type", "text/event-stream");
-            $response->header("Cache-Control", "no-cache");
-            $response->header("Connection", "keep-alive");
-            $response->header("X-Accel-Buffering", "no");
+            $response->header('Content-Type', 'text/event-stream');
+            $response->header('Cache-Control', 'no-cache');
+            $response->header('Connection', 'keep-alive');
+            $response->header('X-Accel-Buffering', 'no');
             $response->header('Content-Encoding', '');
-            $response->header("Content-Length", '');
+            $response->header('Content-Length', '');
             $response->end();
             $streamConnection[$response->fd] = $response->fd;
             $logger->info("Create a new stream: $response->fd");
@@ -65,6 +66,7 @@ require '../vendor/autoload.php';
         go($tcpClient->start(...));
         go(function () use (&$streamConnection, $eventChannel, $randomSubDomainChannel, $server) {
             while ($event = $eventChannel->pop()) {
+                /** @var array{event: string, requestId: string, uri: string} $event */
                 if ($event['event'] === 'random-subdomain') {
                     if ($randomSubDomainChannel->isFull()) {
                         $randomSubDomainChannel->pop();

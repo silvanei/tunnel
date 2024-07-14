@@ -16,7 +16,7 @@ services:
       - dev
     <<: *tunnel
     container_name: "tunnel-client"
-    command: php client/bin/server.php
+    command: php bin/client.php
     ports:
       - "127.0.0.1:9505:9505"
     depends_on:
