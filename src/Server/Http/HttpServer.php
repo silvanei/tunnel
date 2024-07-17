@@ -6,16 +6,21 @@ namespace S3\Tunnel\Server\Http;
 
 use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
+use Laminas\Cache\Psr\CacheItemPool\CacheItemPoolDecorator;
+use Laminas\Cache\Storage\Adapter\Filesystem;
 use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\ServerRequest;
 use Laminas\Diactoros\StreamFactory;
 use Laminas\Stratigility\Middleware\RequestHandlerMiddleware;
 use Laminas\Stratigility\MiddlewarePipe;
+use Mezzio\Session\Cache\CacheSessionPersistence;
+use Mezzio\Session\SessionMiddleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use S3\Tunnel\Server\Http\Controller\AuthenticationAction;
 use S3\Tunnel\Server\Http\Controller\AuthorizationAction;
+use S3\Tunnel\Server\Http\Controller\GoogleAction;
 use S3\Tunnel\Server\Http\Controller\HomeAction;
 use S3\Tunnel\Server\Http\Controller\TcpDispatchAction;
 use S3\Tunnel\Server\Http\Middleware\AuthorizationMiddleware;
@@ -35,6 +40,7 @@ final readonly class HttpServer
     ) {
         $this->dispatcher = simpleDispatcher(function (RouteCollector $router) {
             $router->addRoute('GET', '/', new HomeAction());
+            $router->addRoute('GET', '/google7b953163902ce6a3.html', new GoogleAction());
             $router->addRoute('GET', '/authentication', new AuthenticationAction());
             $router->addRoute('GET', '/github/authorization-callback', new AuthorizationAction($this->githubService));
         });
@@ -85,6 +91,14 @@ final readonly class HttpServer
     {
         $middlewarePipe = new MiddlewarePipe();
         if (! $request->getAttribute('subdomain')) {
+            $middlewarePipe->pipe(new SessionMiddleware(
+                new CacheSessionPersistence(
+                    new CacheItemPoolDecorator(
+                        new Filesystem()
+                    ),
+                    'TUNNEL-SESSION-ID',
+                )
+            ));
             $middlewarePipe->pipe(new AuthorizationMiddleware($this->githubService));
         }
         $middlewarePipe->pipe(new RequestHandlerMiddleware($handler));

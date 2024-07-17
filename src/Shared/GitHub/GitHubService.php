@@ -37,12 +37,13 @@ readonly class GitHubService
             return null;
         }
 
+        /** @var array{error: ?string, access_token: ?string} $token */
         $token = (array)json_decode($response->getBody()->getContents(), true);
-        if ($token['error']) {
+        if (isset($token['error'])) {
             return null;
         }
 
-        return $token['access_token'];
+        return $token['access_token'] ?? null;
     }
 
     public function user(string $accessToken): ?User

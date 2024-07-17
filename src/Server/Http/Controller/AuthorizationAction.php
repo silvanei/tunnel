@@ -6,6 +6,7 @@ namespace S3\Tunnel\Server\Http\Controller;
 
 use Laminas\Diactoros\Response\RedirectResponse;
 use Laminas\Diactoros\Response\TextResponse;
+use Mezzio\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -30,8 +31,9 @@ final readonly class AuthorizationAction implements RequestHandlerInterface
             return new TextResponse(text: 'Internal server error', status: 500);
         }
 
-        $cookie = "cr_github_access_token=$accessToken; Max-Age=2592000; Path=/; HttpOnly";
-        return (new RedirectResponse('/'))
-            ->withAddedHeader('Set-Cookie', $cookie);
+        /** @var SessionInterface $session **/
+        $session = $request->getAttribute(SessionInterface::class);
+        $session->set('cr_github_access_token', $accessToken);
+        return (new RedirectResponse('/'));
     }
 }
