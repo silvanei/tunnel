@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Server\Tcp;
+namespace Test\S3\Tunnel\Server\Tcp;
 
 use Mockery;
 use Mockery\MockInterface;

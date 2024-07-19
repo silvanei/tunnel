@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Server\Tcp;
+namespace Test\S3\Tunnel\Server\Tcp;
 
 use PHPUnit\Framework\TestCase;
 use S3\Tunnel\Server\Tcp\ProcessManager;
