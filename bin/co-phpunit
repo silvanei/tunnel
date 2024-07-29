@@ -1,5 +1,7 @@
 #!/usr/bin/env php
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 use Swoole\Constant;
 use Swoole\Coroutine;
@@ -17,6 +19,9 @@ Coroutine\run(static function () use (&$code) {
         require 'vendor/bin/phpunit';
     } catch (ExitException $exception) {
         $code = $exception->getStatus();
+        if ($exception->getMessage() === 'swoole exit') {
+            $code = $exception->getCode();
+        }
     }
 });
 exit($code);
