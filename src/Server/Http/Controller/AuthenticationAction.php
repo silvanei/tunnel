@@ -13,6 +13,7 @@ final readonly class AuthenticationAction implements RequestHandlerInterface
 {
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        return new ViewModel('authentication');
+        $clientId = getenv('GITHUB_TOKEN') ?: '';
+        return new ViewModel('authentication', ['client_id' => $clientId]);
     }
 }
