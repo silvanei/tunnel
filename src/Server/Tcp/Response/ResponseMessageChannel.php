@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace S3\Tunnel\Server\Tcp;
+namespace S3\Tunnel\Server\Tcp\Response;
 
 use S3\Tunnel\Shared\Tcp\Message\ResponseMessage;
 use Swoole\Coroutine\Channel;
