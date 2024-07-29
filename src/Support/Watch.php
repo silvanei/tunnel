@@ -29,6 +29,7 @@ final class Watch
         $this->inotify = inotify_init();
     }
 
+    /** @param callable(): void $callback */
     public function start(callable $callback): void
     {
         $pid = $this->startProcess($callback);
@@ -45,6 +46,7 @@ final class Watch
         }
     }
 
+    /** @param callable(): void $callback */
     private function startProcess(callable $callback): int
     {
         $this->removeWatch();
@@ -55,6 +57,7 @@ final class Watch
         return $pid;
     }
 
+    /** @return void */
     public function __destruct()
     {
         $this->removeWatch();

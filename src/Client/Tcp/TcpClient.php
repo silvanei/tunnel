@@ -32,8 +32,8 @@ final class TcpClient
         private readonly LoggerInterface $logger,
         private readonly Channel $eventChannel,
     ) {
-        $this->domain = getenv('SERVER_DOMAIN') ?: 'tunnel.localhost';
-        $this->targetHost = getenv('TARGET_HOST') ?: 'echo-server';
+        $this->domain = getenv('SERVER_DOMAIN') ?: 'http://tunnel.localhost';
+        $this->targetHost = getenv('TARGET_HOST') ?: 'http://echo-server';
         $this->accessToken = getenv('GITHUB_ACCESS_TOKEN') ?: '';
     }
 
@@ -114,7 +114,7 @@ final class TcpClient
             Constant::OPTION_LOG_LEVEL => SWOOLE_LOG_DEBUG,
         ]);
         while (! $this->client->connect($host, 9502)) {
-            $this->logger->info('Try connect!!!');
+            $this->logger->info("Try connect on $host:9502 !!!");
             $this->logger->error($this->client->errMsg);
             sleep(2);
         }
