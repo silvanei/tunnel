@@ -14,7 +14,7 @@ use S3\Tunnel\Shared\GitHub\GitHubService;
 
 final readonly class AuthorizationAction implements RequestHandlerInterface
 {
-    public function __construct(private GithubService $githubService)
+    public function __construct(private GitHubService $githubService)
     {
     }
 

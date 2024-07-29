@@ -15,7 +15,7 @@ use S3\Tunnel\Shared\GitHub\User;
 
 final readonly class AuthorizationMiddleware implements MiddlewareInterface
 {
-    public function __construct(private GithubService $githubService)
+    public function __construct(private GitHubService $githubService)
     {
     }
 
