@@ -13,7 +13,7 @@ use Swoole\Http\Server;
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 (function () {
-    $githubService = new GithubService();
+    $githubService = new GitHubService();
 
     $httpLogger = new Logger('http-server');
     $httpServer = new HttpServer(new TcpDispatchAction(), $githubService);

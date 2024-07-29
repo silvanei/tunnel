@@ -36,7 +36,7 @@ final readonly class HttpServer
 
     public function __construct(
         private TcpDispatchAction $tcpDispatchController,
-        private GithubService $githubService,
+        private GitHubService $githubService,
     ) {
         $this->dispatcher = simpleDispatcher(function (RouteCollector $router) {
             $router->addRoute('GET', '/', new HomeAction());
