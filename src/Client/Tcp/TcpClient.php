@@ -182,13 +182,13 @@ final class TcpClient
 
         return <<<RAW
         Request:
-        
+
         {$request->getMethod()} {$request->getRequestTarget()} HTTP/1.1
         {$this->formatHeader($request->getHeaders())}
         {$request->getBody()->getContents()}
 
         Response:
-                    
+
         HTTP/1.1 {$response->getStatusCode()} {$response->getReasonPhrase()}
         {$this->formatHeader($response->getHeaders())}
         {$response->getBody()->getContents()}

@@ -19,7 +19,7 @@ require 'vendor/autoload.php';
         Constant::OPTION_HOOK_FLAGS => SWOOLE_HOOK_ALL,
     ]);
     $http->on(Constant::EVENT_START, static fn() => $logger->debug('Start echo-server'));
-    $http->on(Constant::EVENT_REQUEST, static function(Request $swooleRequest, Response $swooleResponse) use ($logger) {
+    $http->on(Constant::EVENT_REQUEST, static function (Request $swooleRequest, Response $swooleResponse) use ($logger) {
         $logger->debug('Receive request');
 
         $swooleResponse->setStatusCode(200);
