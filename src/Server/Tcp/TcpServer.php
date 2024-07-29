@@ -7,6 +7,7 @@ namespace S3\Tunnel\Server\Tcp;
 use Psr\Log\LoggerInterface;
 use S3\Tunnel\Server\Tcp\Request\DispatchRequestMessage;
 use S3\Tunnel\Server\Tcp\Request\DispatchRequestMessageContext;
+use S3\Tunnel\Server\Tcp\Response\ResponseMessageChannel;
 use S3\Tunnel\Server\Tcp\Session\EncryptedSessionContext;
 use S3\Tunnel\Shared\GitHub\GitHubService;
 use S3\Tunnel\Shared\Tcp\Message\AuthMessage;

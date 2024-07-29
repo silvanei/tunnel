@@ -10,7 +10,7 @@ use Laminas\Diactoros\StreamFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use S3\Tunnel\Server\Tcp\ProcessManager;
-use S3\Tunnel\Server\Tcp\ResponseMessageChannel;
+use S3\Tunnel\Server\Tcp\Response\ResponseMessageChannel;
 use S3\Tunnel\Shared\Tcp\Message\RequestMessage;
 use S3\Tunnel\Shared\Tcp\Message\ResponseMessage;
 use Swoole\Coroutine;

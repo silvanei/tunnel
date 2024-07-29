@@ -8,7 +8,7 @@ use Mockery;
 use Mockery\MockInterface;
 use Psr\Log\LoggerInterface;
 use S3\Tunnel\Server\Tcp\Request\DispatchRequestMessageContext;
-use S3\Tunnel\Server\Tcp\ResponseMessageChannel;
+use S3\Tunnel\Server\Tcp\Response\ResponseMessageChannel;
 use S3\Tunnel\Server\Tcp\Session\EncryptedSessionContext;
 use S3\Tunnel\Server\Tcp\TcpServer;
 use S3\Tunnel\Shared\GitHub\GitHubService;
