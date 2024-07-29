@@ -35,7 +35,7 @@ sh:
 	$(DOCKER_CONTAINER_RUN) sh
 
 test:
-	$(DOCKER_CONTAINER_RUN) composer test
+	$(DOCKER_CONTAINER_RUN) composer test -- $(args)
 
 test-coverage:
 	$(DOCKER_CONTAINER_RUN) composer test-coverage
