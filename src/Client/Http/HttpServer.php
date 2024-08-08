@@ -5,43 +5,30 @@ declare(strict_types=1);
 namespace S3\Tunnel\Client\Http;
 
 use FastRoute\Dispatcher;
-use FastRoute\RouteCollector;
-use Laminas\Diactoros\Response\TextResponse;
-use Laminas\Diactoros\ServerRequest;
-use Laminas\Diactoros\StreamFactory;
-use Laminas\Stratigility\Middleware\RequestHandlerMiddleware;
-use Laminas\Stratigility\MiddlewarePipe;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
-use S3\Tunnel\Client\Http\Action\HomeAction;
 use S3\Tunnel\Client\Tcp\TcpClient;
+use S3\Tunnel\Shared\Http\BaseHttpServer;
 use Swoole\Coroutine\Channel;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
 
-use function FastRoute\simpleDispatcher;
-
-final class HttpServer
+final class HttpServer extends BaseHttpServer
 {
-    private readonly Dispatcher $dispatcher;
     /** @var int[] $streamConnection */
     private array $streamConnection;
     private Channel $randomSubDomainChannel;
 
     public function __construct(
+        Dispatcher $dispatcher,
         private readonly TcpClient $tcpClient,
         private readonly LoggerInterface $logger,
         private readonly Channel $eventChannel,
     ) {
+        parent::__construct($dispatcher);
+
         $this->streamConnection = [];
         $this->randomSubDomainChannel = new Channel();
-
-        $this->dispatcher = simpleDispatcher(function (RouteCollector $router) {
-            $router->addRoute('GET', '/', new HomeAction());
-        });
     }
 
     public function request(Request $swooleRequest, Response $swooleResponse): void
@@ -67,15 +54,7 @@ final class HttpServer
             $this->randomSubDomainChannel->push($randomSubDomain);
         }
 
-        $psrRequest = $this->parseRequest($swooleRequest);
-        $routeInfo = $this->dispatcher->dispatch(httpMethod: $swooleRequest->getMethod() ?: 'GET', uri: $swooleRequest->server['request_uri'] ?? '/');
-        $psrResponse = match ($routeInfo[0]) {
-            Dispatcher::NOT_FOUND => new TextResponse(text: 'Not Found', status: 404),
-            Dispatcher::METHOD_NOT_ALLOWED => new TextResponse(text: 'Method Not Allowed', status: 405),
-            Dispatcher::FOUND => $this->handleRequest($psrRequest, $routeInfo[1]),
-            default => new TextResponse(text: 'Internal Server Error', status: 500),
-        };
-        $this->emitResponse($swooleResponse, $psrResponse);
+        $this->dispatch($swooleRequest, $swooleResponse);
     }
 
     public function close(Server $server, int $fd, int $reactorId): void
@@ -104,37 +83,5 @@ final class HttpServer
                 }
             }
         });
-    }
-
-    private function parseRequest(Request $request): ServerRequestInterface
-    {
-        return new ServerRequest(
-            serverParams: $request->server ?? [],
-            uploadedFiles: $request->files ?? [],
-            uri: $request->server['request_uri'] ?? '/',
-            method: $request->getMethod() ?: 'GET',
-            body: (new StreamFactory())->createStream(content: $request->rawContent() ?: ''),
-            headers: $request->header ?? [],
-            cookieParams: $request->cookie ?? [],
-            queryParams: $request->get ?? [],
-        );
-    }
-
-    private function handleRequest(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
-        $middlewarePipe = new MiddlewarePipe();
-        $middlewarePipe->pipe(new RequestHandlerMiddleware($handler));
-        return $middlewarePipe->handle($request);
-    }
-
-    private function emitResponse(Response $swooleResponse, ResponseInterface $psrResponse): void
-    {
-        foreach ($psrResponse->getHeaders() as $name => $values) {
-            foreach ($values as $value) {
-                $swooleResponse->setHeader($name, $value);
-            }
-        }
-        $swooleResponse->setStatusCode($psrResponse->getStatusCode(), $psrResponse->getReasonPhrase());
-        $swooleResponse->end($psrResponse->getBody()->getContents());
     }
 }
