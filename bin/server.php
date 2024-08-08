@@ -2,21 +2,46 @@
 
 declare(strict_types=1);
 
+use FastRoute\RouteCollector;
+use Laminas\Cache\Psr\CacheItemPool\CacheItemPoolDecorator;
+use Laminas\Cache\Storage\Adapter\Filesystem;
+use Laminas\Stratigility\Middleware\RequestHandlerMiddleware;
+use Laminas\Stratigility\MiddlewarePipe;
+use Mezzio\Session\Cache\CacheSessionPersistence;
+use Mezzio\Session\SessionMiddleware;
+use S3\Tunnel\Server\Http\Controller\AuthenticationAction;
+use S3\Tunnel\Server\Http\Controller\AuthorizationAction;
+use S3\Tunnel\Server\Http\Controller\GoogleAction;
+use S3\Tunnel\Server\Http\Controller\HomeAction;
 use S3\Tunnel\Server\Http\Controller\TcpDispatchAction;
 use S3\Tunnel\Server\Http\HttpServer;
+use S3\Tunnel\Server\Http\Middleware\AuthorizationMiddleware;
 use S3\Tunnel\Server\Tcp\TcpServer;
 use S3\Tunnel\Shared\GitHub\GitHubService;
 use S3\Tunnel\Shared\Logger\Logger;
 use Swoole\Constant;
 use Swoole\Http\Server;
 
+use function FastRoute\simpleDispatcher;
+
 chdir(dirname(__DIR__));
 require 'vendor/autoload.php';
 (function () {
-    $githubService = new GitHubService();
-
     $httpLogger = new Logger('http-server');
-    $httpServer = new HttpServer(new TcpDispatchAction(), $githubService);
+    $githubService = new GitHubService();
+    $dispatcher = simpleDispatcher(function (RouteCollector $router) use ($githubService) {
+        $router->addRoute('GET', '/', new HomeAction());
+        $router->addRoute('GET', '/google7b953163902ce6a3.html', new GoogleAction());
+        $router->addRoute('GET', '/authentication', new AuthenticationAction());
+        $router->addRoute('GET', '/github/authorization-callback', new AuthorizationAction($githubService));
+    });
+    $httpMiddlewarePipe = new MiddlewarePipe();
+    $httpMiddlewarePipe->pipe(new SessionMiddleware(new CacheSessionPersistence(new CacheItemPoolDecorator(new Filesystem()), 'TUNNEL-SESSION-ID')));
+    $httpMiddlewarePipe->pipe(new AuthorizationMiddleware($githubService));
+    $tcpMiddlewarePipe = new MiddlewarePipe();
+    $tcpMiddlewarePipe->pipe(new RequestHandlerMiddleware(new TcpDispatchAction()));
+    $httpServer = new HttpServer($dispatcher, $httpMiddlewarePipe, $tcpMiddlewarePipe);
+
     $http = new Server('0.0.0.0', 9501);
     $http->set([
         Constant::OPTION_LOG_LEVEL => SWOOLE_LOG_DEBUG,
