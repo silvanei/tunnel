@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace S3\Tunnel\Client\Http;
 
-use FastRoute\Dispatcher;
+use Laminas\Stratigility\MiddlewarePipeInterface;
 use Psr\Log\LoggerInterface;
 use S3\Tunnel\Client\Tcp\TcpClient;
 use S3\Tunnel\Shared\Http\BaseHttpServer;
@@ -20,12 +20,12 @@ final class HttpServer extends BaseHttpServer
     private Channel $randomSubDomainChannel;
 
     public function __construct(
-        Dispatcher $dispatcher,
+        MiddlewarePipeInterface $httpMiddlewarePipe,
         private readonly TcpClient $tcpClient,
         private readonly LoggerInterface $logger,
         private readonly Channel $eventChannel,
     ) {
-        parent::__construct($dispatcher);
+        parent::__construct($httpMiddlewarePipe);
 
         $this->streamConnection = [];
         $this->randomSubDomainChannel = new Channel();

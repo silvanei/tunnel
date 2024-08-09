@@ -18,6 +18,7 @@ use S3\Tunnel\Server\Http\HttpServer;
 use S3\Tunnel\Server\Http\Middleware\AuthorizationMiddleware;
 use S3\Tunnel\Server\Tcp\TcpServer;
 use S3\Tunnel\Shared\GitHub\GitHubService;
+use S3\Tunnel\Shared\Http\Middleware\DispatcherHandlerMiddleware;
 use S3\Tunnel\Shared\Logger\Logger;
 use Swoole\Constant;
 use Swoole\Http\Server;
@@ -38,9 +39,11 @@ require 'vendor/autoload.php';
     $httpMiddlewarePipe = new MiddlewarePipe();
     $httpMiddlewarePipe->pipe(new SessionMiddleware(new CacheSessionPersistence(new CacheItemPoolDecorator(new Filesystem()), 'TUNNEL-SESSION-ID')));
     $httpMiddlewarePipe->pipe(new AuthorizationMiddleware($githubService));
+    $httpMiddlewarePipe->pipe(new DispatcherHandlerMiddleware($dispatcher));
+
     $tcpMiddlewarePipe = new MiddlewarePipe();
     $tcpMiddlewarePipe->pipe(new RequestHandlerMiddleware(new TcpDispatchAction()));
-    $httpServer = new HttpServer($dispatcher, $httpMiddlewarePipe, $tcpMiddlewarePipe);
+    $httpServer = new HttpServer($httpMiddlewarePipe, $tcpMiddlewarePipe);
 
     $http = new Server('0.0.0.0', 9501);
     $http->set([
