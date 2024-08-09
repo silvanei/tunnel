@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use FastRoute\RouteCollector;
+use Laminas\Stratigility\MiddlewarePipe;
 use S3\Tunnel\Client\Http\Action\HomeAction;
 use S3\Tunnel\Client\Http\HttpServer;
 use S3\Tunnel\Client\Tcp\TcpClient;
+use S3\Tunnel\Shared\Http\Middleware\DispatcherHandlerMiddleware;
 use S3\Tunnel\Shared\Logger\Logger;
 use Swoole\Constant;
 use Swoole\Coroutine\Channel;
@@ -22,7 +24,9 @@ require 'vendor/autoload.php';
     $dispatcher = simpleDispatcher(function (RouteCollector $router) {
         $router->addRoute('GET', '/', new HomeAction());
     });
-    $httpServer = new HttpServer($dispatcher, $tcpClient, $logger, $eventChannel);
+    $httpMiddlewarePipe = new MiddlewarePipe();
+    $httpMiddlewarePipe->pipe(new DispatcherHandlerMiddleware($dispatcher));
+    $httpServer = new HttpServer($httpMiddlewarePipe, $tcpClient, $logger, $eventChannel);
 
     $http = new Server('0.0.0.0', 9505);
     $http->set([

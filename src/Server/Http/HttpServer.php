@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace S3\Tunnel\Server\Http;
 
-use FastRoute\Dispatcher;
 use Laminas\Stratigility\MiddlewarePipeInterface;
 use S3\Tunnel\Shared\Http\BaseHttpServer;
 use Swoole\Http\Request;
@@ -13,11 +12,10 @@ use Swoole\Http\Response;
 final class HttpServer extends BaseHttpServer
 {
     public function __construct(
-        Dispatcher $dispatcher,
         MiddlewarePipeInterface $httpMiddlewarePipe,
         private readonly MiddlewarePipeInterface $tcpMiddlewarePipe,
     ) {
-        parent::__construct($dispatcher, $httpMiddlewarePipe);
+        parent::__construct($httpMiddlewarePipe);
     }
 
     public function request(Request $swooleRequest, Response $swooleResponse): void

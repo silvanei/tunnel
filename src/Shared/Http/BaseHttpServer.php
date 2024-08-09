@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 namespace S3\Tunnel\Shared\Http;
 
-use FastRoute\Dispatcher;
-use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\ServerRequest;
 use Laminas\Diactoros\StreamFactory;
-use Laminas\Stratigility\Middleware\RequestHandlerMiddleware;
 use Laminas\Stratigility\MiddlewarePipe;
 use Laminas\Stratigility\MiddlewarePipeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 
 abstract class BaseHttpServer
 {
     public function __construct(
-        private readonly Dispatcher $dispatcher,
         private readonly MiddlewarePipeInterface $middlewarePipe = new MiddlewarePipe(),
     ) {
     }
@@ -28,13 +23,7 @@ abstract class BaseHttpServer
     public function dispatch(Request $swooleRequest, Response $swooleResponse): void
     {
         $psrRequest = $this->parseRequest($swooleRequest);
-        $routeInfo = $this->dispatcher->dispatch(httpMethod: $swooleRequest->getMethod() ?: 'GET', uri: $swooleRequest->server['request_uri'] ?? '/');
-        $psrResponse = match ($routeInfo[0]) {
-            Dispatcher::NOT_FOUND => new TextResponse(text: 'Not Found', status: 404),
-            Dispatcher::METHOD_NOT_ALLOWED => new TextResponse(text: 'Method Not Allowed', status: 405),
-            Dispatcher::FOUND => $this->handleRequest($psrRequest, $routeInfo[1]),
-            default => new TextResponse(text: 'Internal Server Error', status: 500),
-        };
+        $psrResponse = $this->middlewarePipe->handle($psrRequest);
         $this->emitResponse($swooleResponse, $psrResponse);
     }
 
@@ -62,12 +51,6 @@ abstract class BaseHttpServer
         }
         $swooleResponse->setStatusCode($psrResponse->getStatusCode(), $psrResponse->getReasonPhrase());
         $swooleResponse->end($psrResponse->getBody()->getContents());
-    }
-
-    private function handleRequest(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
-        $this->middlewarePipe->pipe(new RequestHandlerMiddleware($handler));
-        return $this->middlewarePipe->handle($request);
     }
 
     private function setCookie(ResponseInterface $psrResponse, Response $swooleResponse): ResponseInterface

@@ -12,7 +12,6 @@ parameters:
         - '#Method S3\\Tunnel\\Shared\\Tcp\\Session\\EncryptedSession::decrypt\(\) should return object but returns mixed.#'
         - '#Method S3\\Tunnel\\Server\\Tcp\\ProcessManager::spawn\(\) should return int but returns mixed.#'
         - '#Parameter \#1 \$subdomain of static method S3\\Tunnel\\Server\\Tcp\\Request\\DispatchRequestMessageContext::get\(\) expects string, mixed given.#'
-        - '#Parameter \$httpMethod of method FastRoute\\Dispatcher::dispatch\(\) expects string, mixed given.#'
         - '#Parameter \$method of class Laminas\\Diactoros\\ServerRequest constructor expects string\|null, mixed given.#'
         - '#Cannot call method set\(\) on mixed.#'
         - '#Cannot call method on\(\) on mixed.#'
